@@ -3,15 +3,16 @@
 
 int main(int argc, char const *argv[])
 {
-    char line[] = "LINE TO BE SEPARATED";
-    char *sep = " ";
-    char *keyword = strtok(line, sep);
+    // char line[] = "insert 1 cstack foo@bar.com";
+    char *line = "insert 1 cstack foo@bar.com";
+    // char *sep = " ";
+    char *keyword = strtok(line, " ");
     printf("keyword:%s\n", keyword);
-    char *id_string = strtok(NULL, sep);
+    char *id_string = strtok(NULL, " ");
     printf("id_string:%s\n", id_string);
-    char *username = strtok(NULL, sep);
+    char *username = strtok(NULL, " ");
     printf("username:%s\n", username);
-    char *email = strtok(NULL, sep);
+    char *email = strtok(NULL, " ");
     printf("email:%s\n", email);
     return 0;
 }

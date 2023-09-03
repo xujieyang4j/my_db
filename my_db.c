@@ -269,7 +269,8 @@ void *row_slot(Table *table, uint32_t row_num)
 void read_input(InputBuffer *input_buffer)
 {
     ssize_t bytes_read = getline(&(input_buffer->buffer), &(input_buffer->buffer_length), stdin);
-    printf("bytes_read:%zu\n", bytes_read);
+    printf("read_input:bytes_read:%zu\n", bytes_read);
+    printf("read_input:input_buffer#buffer:%s\n", input_buffer->buffer);
     if (bytes_read <= 0)
     {
         printf("Error reading input\n");
@@ -277,8 +278,8 @@ void read_input(InputBuffer *input_buffer)
     }
     // Ignore trailing newline
     input_buffer->input_length = bytes_read - 1;
-    input_buffer->buffer[bytes_read - 1] = 0;
-    // printf("input_buffer#buffer:%s, input_buffer#buffer_length:%zu, input_buffer#input_length:%zu\n", input_buffer->buffer, input_buffer->buffer_length, input_buffer->input_length);
+    input_buffer->buffer[bytes_read - 1] = '\0';
+    printf("read_input:input_buffer#buffer:%s, input_buffer#buffer_length:%zu, input_buffer#input_length:%zu\n", input_buffer->buffer, input_buffer->buffer_length, input_buffer->input_length);
 }
 
 void close_input_buffer(InputBuffer *input_buffer)
@@ -309,16 +310,25 @@ void free_table(Table *table)
 
 int main(int argc, char const *argv[])
 {
-    // // 调试代码
-    // Table *table = new_table();
-    // InputBuffer *input_buffer = new_input_buffer();
-    // input_buffer->buffer = "insert 1 cstack foo@bar.com";
-    // // input_buffer->input_length = strlen(input_buffer->buffer) - 1;
-    // // input_buffer->buffer[input_buffer->buffer_length] = 0;
-    // Statement statement;
-    // PrepareResult pr = prepare_statement(input_buffer, &statement);
-    // ExecuteResult er = execute_statement(&statement, table);
 
+    // 调试代码
+    Table *table = new_table();
+    InputBuffer *input_buffer = new_input_buffer();
+    // 好奇怪，使用数组定义line可以，
+    char line[] = "insert 1 cstack foo@bar.com\n";
+    input_buffer->buffer = line;
+    ssize_t bytes_read = strlen(line);
+    printf("read_input:bytes_read:%zu\n", bytes_read);
+    printf("read_input:input_buffer#buffer:%s\n", input_buffer->buffer);
+    input_buffer->input_length = bytes_read - 1;
+    input_buffer->buffer[bytes_read - 1] = '\0';
+    printf("input_buffer#buffer:%s, input_buffer#buffer_length:%zu, input_buffer#input_length:%zu\n", input_buffer->buffer, input_buffer->buffer_length, input_buffer->input_length);
+    Statement statement;
+    PrepareResult pr = prepare_statement(input_buffer, &statement);
+    ExecuteResult er = execute_statement(&statement, table);
+    return 0;
+
+    /*
     // 初始化Table
     Table *table = new_table();
 
@@ -366,5 +376,5 @@ int main(int argc, char const *argv[])
             break;
         }
     }
-    return 0;
+    return 0;*/
 }
