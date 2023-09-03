@@ -23,6 +23,8 @@ typedef enum
 {
     PREPARE_SUCCESS,
     PREPARE_SYNTAX_ERROR,
+    PREPARE_NEGATIVE_ID,
+    PREPARE_STRING_TOO_LONG,
     PREPARE_UNRECOGNIZED_STATEMENT
 } PrepareResult;
 
@@ -35,8 +37,12 @@ typedef enum
 typedef struct
 {
     uint32_t id;
-    char username[COLUMN_USERNAME_SIZE];
-    char email[COLUMN_EMAIL_SIZE];
+    // 注意+1
+    //  C strings are supposed to end with a null character, which we should allocate space for.
+    // char username[COLUMN_USERNAME_SIZE];
+    // char email[COLUMN_EMAIL_SIZE];
+    char username[COLUMN_USERNAME_SIZE + 1];
+    char email[COLUMN_EMAIL_SIZE + 1];
 } Row;
 
 typedef struct
@@ -83,6 +89,7 @@ MetaCommandResult do_meta_command(InputBuffer *input_buffer);
 void read_input(InputBuffer *input_buffer);
 void close_input_buffer(InputBuffer *input_buffer);
 PrepareResult prepare_statement(InputBuffer *input_buffer, Statement *statement);
+PrepareResult prepare_insert(InputBuffer *input_buffer, Statement *statement);
 ExecuteResult execute_statement(Statement *statement, Table *table);
 ExecuteResult execute_insert(Statement *statement, Table *table);
 ExecuteResult execute_select(Statement *statement, Table *table);
@@ -124,17 +131,7 @@ PrepareResult prepare_statement(InputBuffer *input_buffer, Statement *statement)
     // 比如：insert 1 cstack foo@bar.com
     if (strncmp(input_buffer->buffer, "insert", 6) == 0)
     {
-        statement->type = STATEMENT_INSERT;
-        // 记录一个错误，user_name和email是char数组，可认为是指针，不用加&
-        // int args_assigned = sscanf(input_buffer->buffer, "insert %d %s %s", &(statement->row_insert.id), &(statement->row_insert.username), &(statement->row_insert.email));
-        // TODO 去掉前后空格
-        int args_assigned = sscanf(input_buffer->buffer, "insert %d %s %s", &(statement->row_insert.id), statement->row_insert.username, statement->row_insert.email);
-
-        if (args_assigned < 3)
-        {
-            return PREPARE_SYNTAX_ERROR;
-        }
-        return PREPARE_SUCCESS;
+        return prepare_insert(input_buffer, statement);
     }
     if (strncmp(input_buffer->buffer, "select", 6) == 0)
     {
@@ -142,6 +139,54 @@ PrepareResult prepare_statement(InputBuffer *input_buffer, Statement *statement)
         return PREPARE_SUCCESS;
     }
     return PREPARE_UNRECOGNIZED_STATEMENT;
+}
+
+PrepareResult prepare_insert(InputBuffer *input_buffer, Statement *statement)
+{
+    statement->type = STATEMENT_INSERT;
+    /*
+    // 记录一个错误，user_name和email是char数组，可认为是指针，不用加&
+    // int args_assigned = sscanf(input_buffer->buffer, "insert %d %s %s", &(statement->row_insert.id), &(statement->row_insert.username), &(statement->row_insert.email));
+    // TODO 去掉前后空格
+    int args_assigned = sscanf(input_buffer->buffer, "insert %d %s %s", &(statement->row_insert.id), statement->row_insert.username, statement->row_insert.email);
+
+    if (args_assigned < 3)
+    {
+        return PREPARE_SYNTAX_ERROR;
+    }
+    return PREPARE_SUCCESS;
+    */
+    char *keyword = strtok(input_buffer->buffer, " ");
+    char *id_string = strtok(NULL, " ");
+    char *username = strtok(NULL, " ");
+    char *email = strtok(NULL, " ");
+    if (id_string == NULL || username == NULL || email == NULL)
+    {
+        return PREPARE_SYNTAX_ERROR;
+    }
+    int id = atoi(id_string);
+    if (id < 1)
+    {
+        return PREPARE_NEGATIVE_ID;
+    }
+    printf("strlen(username):%lu\n", strlen(username));
+    if (strlen(username) > COLUMN_USERNAME_SIZE)
+    {
+        return PREPARE_STRING_TOO_LONG;
+    }
+    if (strlen(email) > COLUMN_EMAIL_SIZE)
+    {
+        return PREPARE_STRING_TOO_LONG;
+    }
+    statement->row_insert.id = id;
+    // 报错，改成strcpy
+    // statement->row_insert.username = username;
+    // statement->row_insert.email = email;
+    strcpy(statement->row_insert.username, username);
+    strcpy(statement->row_insert.email, email);
+
+    printf("id:%d,username:%s,email:%s\n", statement->row_insert.id, statement->row_insert.username, statement->row_insert.email);
+    return PREPARE_SUCCESS;
 }
 
 ExecuteResult execute_statement(Statement *statement, Table *table)
@@ -230,10 +275,10 @@ void read_input(InputBuffer *input_buffer)
         printf("Error reading input\n");
         exit(EXIT_FAILURE);
     }
-    // TODO add by 徐洁阳 Ignore trailing newline ???
+    // Ignore trailing newline
     input_buffer->input_length = bytes_read - 1;
     input_buffer->buffer[bytes_read - 1] = 0;
-    printf("input_buffer#buffer:%s, input_buffer#buffer_length:%zu, input_buffer#input_length:%zu\n", input_buffer->buffer, input_buffer->buffer_length, input_buffer->input_length);
+    // printf("input_buffer#buffer:%s, input_buffer#buffer_length:%zu, input_buffer#input_length:%zu\n", input_buffer->buffer, input_buffer->buffer_length, input_buffer->input_length);
 }
 
 void close_input_buffer(InputBuffer *input_buffer)
@@ -274,10 +319,7 @@ int main(int argc, char const *argv[])
     // PrepareResult pr = prepare_statement(input_buffer, &statement);
     // ExecuteResult er = execute_statement(&statement, table);
 
-    
-
-
-    初始化Table
+    // 初始化Table
     Table *table = new_table();
 
     InputBuffer *input_buffer = new_input_buffer();
@@ -303,6 +345,12 @@ int main(int argc, char const *argv[])
             break;
         case PREPARE_SYNTAX_ERROR:
             printf("Syntax error. Could not parse statement.\n");
+            continue;
+        case (PREPARE_STRING_TOO_LONG):
+            printf("String is too long.\n");
+            continue;
+        case (PREPARE_NEGATIVE_ID):
+            printf("ID must be positive.\n");
             continue;
         case PREPARE_UNRECOGNIZED_STATEMENT:
             printf("Unrecognized statmenr '%s'.\n", input_buffer->buffer);
