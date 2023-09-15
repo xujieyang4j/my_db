@@ -165,6 +165,7 @@ PrepareResult prepare_insert(InputBuffer *input_buffer, Statement *statement)
         return PREPARE_SYNTAX_ERROR;
     }
     int id = atoi(id_string);
+//    int id = strtol(id_string, NULL, 10);
     if (id < 1)
     {
         return PREPARE_NEGATIVE_ID;
@@ -310,24 +311,6 @@ void free_table(Table *table)
 
 int main(int argc, char const *argv[])
 {
-
-    // 调试代码
-    Table *table = new_table();
-    InputBuffer *input_buffer = new_input_buffer();
-    char line[] = "insert 1 cstack foo@bar.com\n";
-    input_buffer->buffer = line;
-    ssize_t bytes_read = strlen(line);
-    printf("read_input:bytes_read:%zu\n", bytes_read);
-    printf("read_input:input_buffer#buffer:%s\n", input_buffer->buffer);
-    input_buffer->input_length = bytes_read - 1;
-    input_buffer->buffer[bytes_read - 1] = '\0';
-    printf("input_buffer#buffer:%s, input_buffer#buffer_length:%zu, input_buffer#input_length:%zu\n", input_buffer->buffer, input_buffer->buffer_length, input_buffer->input_length);
-    Statement statement;
-    PrepareResult pr = prepare_statement(input_buffer, &statement);
-    ExecuteResult er = execute_statement(&statement, table);
-    return 0;
-
-    /*
     // 初始化Table
     Table *table = new_table();
 
@@ -375,5 +358,5 @@ int main(int argc, char const *argv[])
             break;
         }
     }
-    return 0;*/
+    return 0;
 }
