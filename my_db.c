@@ -314,7 +314,6 @@ int main(int argc, char const *argv[])
     // 调试代码
     Table *table = new_table();
     InputBuffer *input_buffer = new_input_buffer();
-    // 好奇怪，使用数组定义line可以，
     char line[] = "insert 1 cstack foo@bar.com\n";
     input_buffer->buffer = line;
     ssize_t bytes_read = strlen(line);

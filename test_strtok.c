@@ -1,11 +1,10 @@
 #include <stdio.h>
 #include <string.h>
 
-int main(int argc, char const *argv[])
-{
-    // char line[] = "insert 1 cstack foo@bar.com";
-    char *line = "insert 1 cstack foo@bar.com";
-    // char *sep = " ";
+int main(int argc, char const *argv[]) {
+    char line[] = "insert 1 cstack foo@bar.com";
+//    char *line = "insert 1 cstack foo@bar.com";
+//     char *sep = " ";
     char *keyword = strtok(line, " ");
     printf("keyword:%s\n", keyword);
     char *id_string = strtok(NULL, " ");
