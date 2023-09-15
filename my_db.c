@@ -345,7 +345,7 @@ int main(int argc, char const *argv[])
             printf("ID must be positive.\n");
             continue;
         case PREPARE_UNRECOGNIZED_STATEMENT:
-            printf("Unrecognized statmenr '%s'.\n", input_buffer->buffer);
+            printf("Unrecognized statement '%s'.\n", input_buffer->buffer);
             continue;
         }
         switch (execute_statement(&statement, table))
