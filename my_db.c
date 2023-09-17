@@ -56,21 +56,28 @@ typedef enum {
 // 定义获取struct属性占有的存储大小 sizeof操作符以字节形式给出了其操作数的存储大小
 #define size_of_attribute(Struct, Attribute) sizeof(((Struct *)0)->Attribute)
 
-// id占有的字节数
+// ID占用的字节数
 const uint32_t ID_SIZE = size_of_attribute(Row, id);
 // username占用的字节数
 const uint32_t USERNAME_SIZE = size_of_attribute(Row, username);
 // email占用的字节数
 const uint32_t EMAIL_SIZE = size_of_attribute(Row, email);
 
+// ID的偏移量
 const uint32_t ID_OFFSET = 0;
+// username的偏移量=ID的偏移量+id占有的字节数
 const uint32_t USERNAME_OFFSET = ID_OFFSET + ID_SIZE;
+// email的偏移量=username的偏移量+username占用的字节数
 const uint32_t EMAIL_OFFSET = USERNAME_OFFSET + USERNAME_SIZE;
+// 每行占用的字节数
 const uint32_t ROW_SIZE = ID_SIZE + USERNAME_SIZE + EMAIL_SIZE;
+//  每页的字节数
 const uint32_t PAGE_SIZE = 4096;
 
 #define TABLE_MAX_PAGES 100
+// 每页存储的行数
 const uint32_t ROWS_PER_PAGE = PAGE_SIZE / ROW_SIZE;
+// table最大行
 const uint32_t TABLE_MAX_ROWS = ROWS_PER_PAGE * TABLE_MAX_PAGES;
 
 typedef struct {
@@ -435,7 +442,7 @@ int main(int argc, char const *argv[]) {
     }
 
     const char *file_name = argv[1];
-    Table* table = db_open(file_name);
+    Table *table = db_open(file_name);
 
     InputBuffer *input_buffer = new_input_buffer();
     while (true) {
