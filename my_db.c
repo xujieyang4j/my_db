@@ -45,7 +45,7 @@ typedef struct {
 
 typedef struct {
     StatementType type;
-    Row row_insert;
+    Row *row_insert;
 } Statement;
 
 typedef enum {
@@ -179,7 +179,8 @@ PrepareResult prepare_insert(InputBuffer *input_buffer, Statement *statement) {
     }
     return PREPARE_SUCCESS;
     */
-    char *keyword = strtok(input_buffer->buffer, " ");
+//    char *keyword = strtok(input_buffer->buffer, " ");
+    strtok(input_buffer->buffer, " ");
     char *id_string = strtok(NULL, " ");
     char *username = strtok(NULL, " ");
     char *email = strtok(NULL, " ");
@@ -191,22 +192,21 @@ PrepareResult prepare_insert(InputBuffer *input_buffer, Statement *statement) {
     if (id < 1) {
         return PREPARE_NEGATIVE_ID;
     }
-    printf("strlen(username):%lu\n", strlen(username));
+//    printf("strlen(username):%lu\n", strlen(username));
     if (strlen(username) > COLUMN_USERNAME_SIZE) {
         return PREPARE_STRING_TOO_LONG;
     }
     if (strlen(email) > COLUMN_EMAIL_SIZE) {
         return PREPARE_STRING_TOO_LONG;
     }
-    statement->row_insert.id = id;
+    statement->row_insert->id = id;
     // 报错，改成strcpy
-    // statement->row_insert.username = username;
+//     statement->row_insert.username = username;
     // statement->row_insert.email = email;
-    strcpy(statement->row_insert.username, username);
-    strcpy(statement->row_insert.email, email);
+    strcpy(statement->row_insert->username, username);
+    strcpy(statement->row_insert->email, email);
 
-    printf("id:%d,username:%s,email:%s\n", statement->row_insert.id, statement->row_insert.username,
-           statement->row_insert.email);
+//    printf("id:%d,username:%s,email:%s\n", statement->row_insert.id, statement->row_insert.username, statement->row_insert.email);
     return PREPARE_SUCCESS;
 }
 
@@ -214,10 +214,8 @@ ExecuteResult execute_statement(Statement *statement, Table *table) {
     switch (statement->type) {
         case (STATEMENT_INSERT):
             return execute_insert(statement, table);
-            break;
         case (STATEMENT_SELECT):
             return execute_select(statement, table);
-            break;
     }
 }
 
@@ -225,7 +223,7 @@ ExecuteResult execute_insert(Statement *statement, Table *table) {
     if (table->num_rows >= TABLE_MAX_ROWS) {
         return EXECUTE_TABLE_FULL;
     }
-    Row *row_to_insert = &(statement->row_insert);
+    Row *row_to_insert = statement->row_insert;
     serialize_row(row_to_insert, row_slot(table, table->num_rows));
     table->num_rows += 1;
     return EXECUTE_SUCCESS;
@@ -309,8 +307,8 @@ void *get_page(Pager *pager, uint32_t page_num) {
 
 void read_input(InputBuffer *input_buffer) {
     ssize_t bytes_read = getline(&(input_buffer->buffer), &(input_buffer->buffer_length), stdin);
-    printf("read_input:bytes_read:%zu\n", bytes_read);
-    printf("read_input:input_buffer#buffer:%s\n", input_buffer->buffer);
+//    printf("read_input:bytes_read:%zu\n", bytes_read);
+//    printf("read_input:input_buffer#buffer:%s\n", input_buffer->buffer);
     if (bytes_read <= 0) {
         printf("Error reading input\n");
         exit(EXIT_FAILURE);
@@ -318,8 +316,8 @@ void read_input(InputBuffer *input_buffer) {
     // Ignore trailing newline
     input_buffer->input_length = bytes_read - 1;
     input_buffer->buffer[bytes_read - 1] = '\0';
-    printf("read_input:input_buffer#buffer:%s, input_buffer#buffer_length:%zu, input_buffer#input_length:%zu\n",
-           input_buffer->buffer, input_buffer->buffer_length, input_buffer->input_length);
+//    printf("read_input:input_buffer#buffer:%s, input_buffer#buffer_length:%zu, input_buffer#input_length:%zu\n",
+//           input_buffer->buffer, input_buffer->buffer_length, input_buffer->input_length);
 }
 
 void close_input_buffer(InputBuffer *input_buffer) {
